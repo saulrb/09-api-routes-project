@@ -1,95 +1,60 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
+import { BaseSyntheticEvent, FormEventHandler, useRef, useState } from 'react'
+
+import styles from './page.module.css'
 
 export default function Home() {
+  const emailRef = useRef(null)
+  const feedbackRef = useRef(null)
+  const [feedbackItems, setFeedbackItems] = useState([])
+
+  const submitFormHandler = (event: BaseSyntheticEvent) => {
+    event.preventDefault()
+    let enteredEmail = ''
+    if (emailRef !== null && emailRef.current !== null) {
+      enteredEmail = emailRef.current.value
+    }
+    let enteredFeedback = ''
+    if (feedbackRef !== null && feedbackRef.current !== null) {
+      enteredFeedback = feedbackRef.current.value
+    }
+    console.log('Entered values:', enteredEmail, ':', enteredFeedback)
+    const reqBody = { email: enteredEmail, text: enteredFeedback }
+    fetch('/api/feedback', {
+      method: 'POST',
+      body: JSON.stringify(reqBody),
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then(response => response.json())
+      .then(data => console.log(data))
+  }
+
+  const loadFeedbackHandler = () => {
+    fetch('/api/feedback')
+      .then(response => response.json())
+      .then(data => setFeedbackItems(data.feedbacks))
+  }
+
   return (
     <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
+      <h1>The Home Page</h1>
+      <form onSubmit={submitFormHandler}>
         <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+          <label htmlFor="email">Your Email Address</label>
+          <input type="email" id="email" ref={emailRef} />
         </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+        <div>
+          <label htmlFor="feedback">Your Feedback</label>
+          <textarea id="feedback" rows={5} ref={feedbackRef} />
+        </div>
+        <button>Send feedback</button>
+      </form>
+      <button onClick={loadFeedbackHandler}>Show feedback's</button>
+      <ul>
+        {feedbackItems.map(item => (
+          <li key={item.id}>{item.text}</li>
+        ))}
+      </ul>
     </main>
-  );
+  )
 }
